@@ -61,3 +61,4 @@ npm start
 | Opus | Complex, multi-step reasoning | Highest |
 
 Smart model routing can reduce costs by 80%+!
+
