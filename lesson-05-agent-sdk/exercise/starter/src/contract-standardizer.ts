@@ -90,14 +90,33 @@ export async function standardizeContract(
   outputFilename: string
 ): Promise<StandardizedContract> {
   const outputPath = path.join(STANDARDIZED_FOLDER, outputFilename);
+  
+  try {
+    const result = query({
+      prompt: contractStandardizerPrompt(inputPath, outputPath),
+      options: { model, allowedTools: ["Read", "Write"] },
+    });
 
-  // TODO: Implement the function
+    let rawResult = "";
 
-  return {
-    inputPath,
-    outputPath,
-    raw: '' // TODO: Return raw result
-  };
+    for await (const message of result) {
+      if (message.type !== "result") continue;
+      if (message.subtype === "success") {
+        rawResult = message.result;
+        break;
+      }
+      throw new Error(`Agent SDK error: ${(message.errors || []).join('\n')}`);
+    }
 
-  // TODO: Catch any errors and re-throw with message: "Failed to standardize contract: {original message}"
+    return {
+      inputPath,
+      outputPath,
+      raw: rawResult,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Failed to standardize contract: ${error.message}`);
+    }
+    throw new Error("Failed to standardize contract: Unknown error");
+  }
 }
